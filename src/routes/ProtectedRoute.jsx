@@ -1,9 +1,15 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Loader } from "../components/common";
 
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('accessToken');
+  const { isAuthenticated, loading } = useSelector((state) => state.auth);
 
-  if (!token) {
+  if (loading) {
+    return <Loader className="min-h-screen" />;
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

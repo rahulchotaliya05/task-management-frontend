@@ -1,9 +1,25 @@
-import { Routes, Route } from 'react-router-dom';
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCurrentUser } from "./features/auth/authSlice";
+import { Loader } from "./components/common";
+import AppRoutes from "./routes/AppRoutes";
 
-function App() {
-  return (
-    <h1>inital setup done</h1>
-  );
-}
+const App = () => {
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      dispatch(fetchCurrentUser());
+    }
+  }, [dispatch]);
+
+  if (loading && localStorage.getItem("accessToken")) {
+    return <Loader className="min-h-screen" />;
+  }
+
+  return <AppRoutes />;
+};
 
 export default App;
