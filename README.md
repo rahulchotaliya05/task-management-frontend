@@ -222,6 +222,24 @@ Admin sees sidebar with Home + Manage Boards. Regular users see only boards they
 
 | `npm run lint` | Run ESLint |
 
+## Docker
+
+```bash
+# Standalone frontend container
+docker build -t taskboard-frontend .
+docker run -p 80:80 taskboard-frontend
+```
+
+Or use the full stack docker-compose from the backend repository:
+
+```bash
+# From backend repo root
+cp docker.env.example docker.env
+docker compose up --build
+```
+
+This starts MongoDB + Backend (port 5000) + Frontend (port 80). Access app at `http://localhost`.
+
 ## Browser Support
 
 Tested on latest Chrome, Firefox, and Edge. Responsive layout works on desktop and tablet viewports.
