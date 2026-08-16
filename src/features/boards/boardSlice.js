@@ -102,6 +102,7 @@ export const removeMember = createAsyncThunk(
 const initialState = {
   boards: [],
   currentBoard: null,
+  columns: [],
   loading: false,
   error: null,
 };
@@ -115,6 +116,7 @@ const boardSlice = createSlice({
     },
     clearCurrentBoard: (state) => {
       state.currentBoard = null;
+      state.columns = [];
     },
   },
   extraReducers: (builder) => {
@@ -139,6 +141,7 @@ const boardSlice = createSlice({
       .addCase(fetchBoardById.fulfilled, (state, action) => {
         state.loading = false;
         state.currentBoard = action.payload.board;
+        state.columns = action.payload.columns || [];
       })
       .addCase(fetchBoardById.rejected, (state, action) => {
         state.loading = false;

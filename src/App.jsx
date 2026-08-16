@@ -1,21 +1,26 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import { Loader } from "./components/common";
 import AppRoutes from "./routes/AppRoutes";
 
 const App = () => {
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.auth);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
+
     if (token) {
-      dispatch(fetchCurrentUser());
+      dispatch(fetchCurrentUser()).finally(() => {
+        setInitializing(false);
+      });
+    } else {
+      setInitializing(false);
     }
   }, [dispatch]);
 
-  if (loading && localStorage.getItem("accessToken")) {
+  if (initializing) {
     return <Loader className="min-h-screen" />;
   }
 
