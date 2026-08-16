@@ -14,9 +14,6 @@ import {
   fetchBoardById,
   clearCurrentBoard,
   optimisticMoveCard,
-  addCard,
-  updateCardInState,
-  removeCard,
   setCards,
 } from "./boardSlice";
 import { cardAPI } from "../../api/card.api";
@@ -26,6 +23,7 @@ import CardModal from "../../components/board/CardModal";
 import SortableCard from "../../components/board/SortableCard";
 import DroppableColumn from "../../components/board/DroppableColumn";
 import useSocket from "../../hooks/useSocket";
+import useDebounce from "../../hooks/useDebounce";
 import toast from "react-hot-toast";
 
 const BoardDetailPage = () => {
@@ -39,6 +37,9 @@ const BoardDetailPage = () => {
   const [cardModal, setCardModal] = useState({ open: false, card: null, columnId: null });
   const [saving, setSaving] = useState(false);
   const [previousCards, setPreviousCards] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const debouncedSearch = useDebounce(searchTerm, 400);
 
   useSocket(id);
 
@@ -49,14 +50,19 @@ const BoardDetailPage = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchBoardById(id));
+    const params = {};
+    if (debouncedSearch.trim()) {
+      params.search = debouncedSearch.trim();
+    }
+    dispatch(fetchBoardById({ id, params }));
+  }, [dispatch, id, debouncedSearch]);
 
+  useEffect(() => {
     return () => {
       dispatch(clearCurrentBoard());
     };
-  }, [dispatch, id]);
+  }, [dispatch]);
 
-  // Memoized: cards grouped by column, sorted by position
   const cardsByColumn = useMemo(() => {
     const grouped = {};
     columns.forEach((col) => {
@@ -138,10 +144,10 @@ const BoardDetailPage = () => {
   const handleCreateCard = async (data) => {
     setSaving(true);
     try {
-      const response = await cardAPI.create(cardModal.columnId, data);
-      dispatch(addCard(response.data.data.card));
+      await cardAPI.create(cardModal.columnId, data);
       setCardModal({ open: false, card: null, columnId: null });
       toast.success("Card created");
+      dispatch(fetchBoardById({ id }));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to create card");
     }
@@ -151,10 +157,10 @@ const BoardDetailPage = () => {
   const handleUpdateCard = async (data) => {
     setSaving(true);
     try {
-      const response = await cardAPI.update(cardModal.card._id, data);
-      dispatch(updateCardInState(response.data.data.card));
+      await cardAPI.update(cardModal.card._id, data);
       setCardModal({ open: false, card: null, columnId: null });
       toast.success("Card updated");
+      dispatch(fetchBoardById({ id }));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update card");
     }
@@ -166,8 +172,8 @@ const BoardDetailPage = () => {
 
     try {
       await cardAPI.delete(cardId);
-      dispatch(removeCard(cardId));
       toast.success("Card deleted");
+      dispatch(fetchBoardById({ id }));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete card");
     }
@@ -222,18 +228,32 @@ const BoardDetailPage = () => {
               )}
             </div>
           </div>
-          {isOwner && (
-            <button
-              onClick={() => navigate(`/admin/boards/${id}`)}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-100"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <svg className="w-4 h-4 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Settings
-            </button>
-          )}
+              <input
+                type="text"
+                placeholder="Search cards..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 pr-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48"
+              />
+            </div>
+            {isOwner && (
+              <button
+                onClick={() => navigate(`/admin/boards/${id}`)}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-100"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

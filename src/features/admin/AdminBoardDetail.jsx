@@ -33,7 +33,7 @@ const AdminBoardDetail = () => {
   const [editColumnTitle, setEditColumnTitle] = useState("");
 
   useEffect(() => {
-    dispatch(fetchBoardById(id));
+    dispatch(fetchBoardById({ id }));
     loadUsers();
 
     return () => {
@@ -108,7 +108,7 @@ const AdminBoardDetail = () => {
       await columnAPI.create(id, { title: newColumnTitle.trim() });
       toast.success("Column created");
       setNewColumnTitle("");
-      dispatch(fetchBoardById(id));
+      dispatch(fetchBoardById({ id }));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to create column");
     }
@@ -123,7 +123,7 @@ const AdminBoardDetail = () => {
       toast.success("Column updated");
       setEditingColumn(null);
       setEditColumnTitle("");
-      dispatch(fetchBoardById(id));
+      dispatch(fetchBoardById({ id }));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update column");
     }
@@ -135,7 +135,7 @@ const AdminBoardDetail = () => {
     try {
       await columnAPI.delete(columnId);
       toast.success("Column deleted");
-      dispatch(fetchBoardById(id));
+      dispatch(fetchBoardById({ id }));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete column");
     }
