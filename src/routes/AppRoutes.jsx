@@ -13,45 +13,43 @@ const RoleGuard = ({ role, children }) => {
   return children;
 };
 
-const renderRoutes = (routeList) => {
-  return routeList.map((route) => {
-    const element = route.requiresAuth ? (
-      <ProtectedRoute>{route.element}</ProtectedRoute>
-    ) : (
-      route.element
+const renderRoute = (route) => {
+  let element = route.element;
+
+  if (route.requiresAuth) {
+    element = <ProtectedRoute>{element}</ProtectedRoute>;
+  }
+
+  if (route.children) {
+    return (
+      <Route key={route.path} path={route.path} element={element}>
+        {route.children.map((child) => {
+          const childElement = child.requiredRole ? (
+            <RoleGuard role={child.requiredRole}>{child.element}</RoleGuard>
+          ) : (
+            child.element
+          );
+
+          return (
+            <Route
+              key={child.path || "index"}
+              index={child.index}
+              path={child.path}
+              element={childElement}
+            />
+          );
+        })}
+      </Route>
     );
+  }
 
-    if (route.children) {
-      return (
-        <Route key={route.path} path={route.path} element={element}>
-          {route.children.map((child) => {
-            const childElement = child.requiredRole ? (
-              <RoleGuard role={child.requiredRole}>{child.element}</RoleGuard>
-            ) : (
-              child.element
-            );
-
-            return (
-              <Route
-                key={child.path || "index"}
-                index={child.index}
-                path={child.path}
-                element={childElement}
-              />
-            );
-          })}
-        </Route>
-      );
-    }
-
-    return <Route key={route.path} path={route.path} element={element} />;
-  });
+  return <Route key={route.path} path={route.path} element={element} />;
 };
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {renderRoutes(routes)}
+      {routes.map(renderRoute)}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

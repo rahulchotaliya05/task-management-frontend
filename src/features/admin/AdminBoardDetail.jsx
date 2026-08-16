@@ -10,7 +10,7 @@ import {
 } from "../boards/boardSlice";
 import { columnAPI } from "../../api/column.api";
 import { userAPI } from "../../api/user.api";
-import { Button, Input, Loader, Modal } from "../../components/common";
+import { Button, Input, Loader, Modal, ConfirmModal } from "../../components/common";
 import toast from "react-hot-toast";
 
 const AdminBoardDetail = () => {
@@ -24,6 +24,8 @@ const AdminBoardDetail = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [adding, setAdding] = useState(false);
+  const [removingMember, setRemovingMember] = useState(null);
+  const [removeLoading, setRemoveLoading] = useState(false);
 
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [creatingColumn, setCreatingColumn] = useState(false);
@@ -85,13 +87,16 @@ const AdminBoardDetail = () => {
   };
 
   const handleRemoveMember = async (userId) => {
+    setRemoveLoading(true);
     const result = await dispatch(removeMember({ boardId: id, userId }));
+    setRemoveLoading(false);
 
     if (removeMember.fulfilled.match(result)) {
       toast.success("Member removed");
     } else {
       toast.error(result.payload);
     }
+    setRemovingMember(null);
   };
 
   const handleCreateColumn = async (e) => {
@@ -318,7 +323,7 @@ const AdminBoardDetail = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => handleRemoveMember(member._id)}
+                    onClick={() => setRemovingMember(member)}
                     className="text-xs text-gray-500 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     Remove
@@ -329,6 +334,16 @@ const AdminBoardDetail = () => {
           )}
         </section>
       </div>
+
+      <ConfirmModal
+        isOpen={!!removingMember}
+        onClose={() => setRemovingMember(null)}
+        onConfirm={() => handleRemoveMember(removingMember._id)}
+        title="Remove Member"
+        message={`Are you sure you want to remove "${removingMember?.name}" from this board? They will lose access to all cards on this board.`}
+        confirmText="Remove"
+        loading={removeLoading}
+      />
     </div>
   );
 };

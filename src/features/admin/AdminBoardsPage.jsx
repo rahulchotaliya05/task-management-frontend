@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchBoards, createBoard, deleteBoard } from "../boards/boardSlice";
-import { Button, Loader, Modal, Input } from "../../components/common";
+import { Button, Loader, Modal, Input, ConfirmModal } from "../../components/common";
 import useDebounce from "../../hooks/useDebounce";
 import toast from "react-hot-toast";
 
@@ -19,6 +19,8 @@ const AdminBoardsPage = () => {
   const [creating, setCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [deletingBoard, setDeletingBoard] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const debouncedSearch = useDebounce(searchTerm, 400);
 
@@ -55,16 +57,20 @@ const AdminBoardsPage = () => {
     }
   };
 
-  const handleDelete = async (boardId) => {
-    if (!window.confirm("Are you sure you want to delete this board?")) return;
+  const handleDelete = async () => {
+    if (!deletingBoard) return;
 
-    const result = await dispatch(deleteBoard(boardId));
+    setDeleteLoading(true);
+    const result = await dispatch(deleteBoard(deletingBoard._id));
+    setDeleteLoading(false);
+
     if (deleteBoard.fulfilled.match(result)) {
       toast.success("Board deleted");
       dispatch(fetchBoards());
     } else {
       toast.error(result.payload);
     }
+    setDeletingBoard(null);
   };
 
   if (loading) {
@@ -142,7 +148,7 @@ const AdminBoardsPage = () => {
                         <Button
                           variant="danger"
                           size="sm"
-                          onClick={() => handleDelete(board._id)}
+                          onClick={() => setDeletingBoard(board)}
                         >
                           Delete
                         </Button>
@@ -201,6 +207,16 @@ const AdminBoardsPage = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!deletingBoard}
+        onClose={() => setDeletingBoard(null)}
+        onConfirm={handleDelete}
+        title="Delete Board"
+        message={`Are you sure you want to delete "${deletingBoard?.title}"? This action cannot be undone and all columns and cards will be removed.`}
+        confirmText="Delete"
+        loading={deleteLoading}
+      />
     </div>
   );
 };

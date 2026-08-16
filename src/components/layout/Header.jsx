@@ -17,25 +17,13 @@ const Header = () => {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/boards" className="text-lg font-semibold text-gray-800">
-            TaskBoard
-          </Link>
-          {isAuthenticated && user?.role === "admin" && (
-            <nav className="flex gap-4">
-              <Link to="/admin/boards" className="text-sm text-gray-600 hover:text-gray-800">
-                Manage Boards
-              </Link>
-            </nav>
-          )}
-        </div>
+        <Link to="/boards" className="text-lg font-semibold text-gray-800">
+          TaskBoard
+        </Link>
 
         {isAuthenticated && (
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              {user?.name}
-              <span className="ml-1 text-xs text-gray-400">({user?.role})</span>
-            </span>
+            <span className="text-sm text-gray-600">{user?.name}</span>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               Logout
             </Button>

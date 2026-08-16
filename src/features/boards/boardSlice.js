@@ -103,6 +103,7 @@ const initialState = {
   boards: [],
   currentBoard: null,
   columns: [],
+  cards: [],
   loading: false,
   error: null,
 };
@@ -117,6 +118,49 @@ const boardSlice = createSlice({
     clearCurrentBoard: (state) => {
       state.currentBoard = null;
       state.columns = [];
+      state.cards = [];
+    },
+    optimisticMoveCard: (state, action) => {
+      const { cardId, targetColumnId, position } = action.payload;
+      const cardIndex = state.cards.findIndex((c) => c._id === cardId);
+
+      if (cardIndex === -1) return;
+
+      const card = state.cards[cardIndex];
+      const sourceColumnId = card.column;
+
+      // Remove card from source position
+      state.cards.forEach((c) => {
+        if (c.column === sourceColumnId && c.position > card.position && c._id !== cardId) {
+          c.position -= 1;
+        }
+      });
+
+      // Make space in target column
+      state.cards.forEach((c) => {
+        if (c.column === targetColumnId && c.position >= position && c._id !== cardId) {
+          c.position += 1;
+        }
+      });
+
+      // Move the card
+      state.cards[cardIndex].column = targetColumnId;
+      state.cards[cardIndex].position = position;
+    },
+    setCards: (state, action) => {
+      state.cards = action.payload;
+    },
+    addCard: (state, action) => {
+      state.cards.push(action.payload);
+    },
+    updateCardInState: (state, action) => {
+      const index = state.cards.findIndex((c) => c._id === action.payload._id);
+      if (index !== -1) {
+        state.cards[index] = action.payload;
+      }
+    },
+    removeCard: (state, action) => {
+      state.cards = state.cards.filter((c) => c._id !== action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -142,6 +186,7 @@ const boardSlice = createSlice({
         state.loading = false;
         state.currentBoard = action.payload.board;
         state.columns = action.payload.columns || [];
+        state.cards = action.payload.cards || [];
       })
       .addCase(fetchBoardById.rejected, (state, action) => {
         state.loading = false;
@@ -194,5 +239,14 @@ const boardSlice = createSlice({
   },
 });
 
-export const { clearBoardError, clearCurrentBoard } = boardSlice.actions;
+export const {
+  clearBoardError,
+  clearCurrentBoard,
+  optimisticMoveCard,
+  setCards,
+  addCard,
+  updateCardInState,
+  removeCard,
+} = boardSlice.actions;
+
 export default boardSlice.reducer;
