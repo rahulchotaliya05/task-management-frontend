@@ -1,11 +1,13 @@
+import { lazy } from "react";
 import { Navigate } from "react-router-dom";
-import LoginPage from "../features/auth/LoginPage";
-import RegisterPage from "../features/auth/RegisterPage";
 import Layout from "../components/layout/Layout";
-import BoardListPage from "../features/boards/BoardListPage";
-import BoardDetailPage from "../features/boards/BoardDetailPage";
-import AdminBoardsPage from "../features/admin/AdminBoardsPage";
-import AdminBoardDetail from "../features/admin/AdminBoardDetail";
+
+const LoginPage = lazy(() => import("../features/auth/LoginPage"));
+const RegisterPage = lazy(() => import("../features/auth/RegisterPage"));
+const BoardListPage = lazy(() => import("../features/boards/BoardListPage"));
+const BoardDetailPage = lazy(() => import("../features/boards/BoardDetailPage"));
+const AdminBoardsPage = lazy(() => import("../features/admin/AdminBoardsPage"));
+const AdminBoardDetail = lazy(() => import("../features/admin/AdminBoardDetail"));
 
 export const routes = [
   {

@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { routes } from "./routes";
 import ProtectedRoute from "./ProtectedRoute";
+import { Loader } from "../components/common";
 
 const RoleGuard = ({ role, children }) => {
   const { user } = useSelector((state) => state.auth);
@@ -48,10 +50,12 @@ const renderRoute = (route) => {
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      {routes.map(renderRoute)}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Suspense fallback={<Loader className="min-h-screen" />}>
+      <Routes>
+        {routes.map(renderRoute)}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 };
 
